@@ -26,7 +26,9 @@ export function addToHistory(item: HistoryItem): void {
   }
 }
 
-// Clear history function (not currently used in UI, but available for future use)
+/**
+ * Clear all history from localStorage
+ */
 export function clearHistory(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);

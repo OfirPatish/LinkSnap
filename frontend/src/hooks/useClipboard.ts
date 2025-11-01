@@ -26,5 +26,5 @@ export function useClipboard(timeout: number = 2000) {
     return copiedId === id;
   };
 
-  return { copy, isCopied, copiedId };
+  return { copy, isCopied };
 }
