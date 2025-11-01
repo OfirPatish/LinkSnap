@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle, Zap, Link as LinkIcon } from "lucide-react";
 
 interface UrlFormProps {
-  onSuccess: (result: ShortenResponse) => void;
+  onSuccess: (result?: ShortenResponse) => void;
 }
 
 export function UrlForm({ onSuccess }: UrlFormProps) {

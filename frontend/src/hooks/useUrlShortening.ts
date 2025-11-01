@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { ShortenResponse } from "@/types";
 
 /**
  * Custom hook for managing URL shortening refresh trigger
@@ -8,7 +7,7 @@ import type { ShortenResponse } from "@/types";
 export function useUrlShortening() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const handleSuccess = (result: ShortenResponse) => {
+  const handleSuccess = () => {
     // Refresh history list to show the new link
     setRefreshTrigger((prev) => prev + 1);
   };
