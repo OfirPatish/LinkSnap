@@ -8,7 +8,7 @@ A modern full-stack URL shortener application demonstrating clean architecture, 
 - 📊 Track click statistics for each short link
 - 📋 One-click copy functionality
 - 📜 Local history with persistent storage
-- 🎨 Modern, responsive UI with dark mode support
+- 🎨 Modern, responsive UI
 - 🧹 Clear history functionality
 
 ## Tech Stack

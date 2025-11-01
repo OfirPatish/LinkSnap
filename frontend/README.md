@@ -16,6 +16,6 @@ Frontend runs on `http://localhost:5173`
 - Modern React 19 with custom hooks
 - TypeScript for type safety
 - Component composition and clean architecture
-- Responsive design with dark mode
+- Responsive design
 
 See main [README.md](../README.md) for full documentation.
