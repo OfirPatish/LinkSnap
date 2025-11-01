@@ -6,7 +6,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Copy, ExternalLink, BarChart3, Loader2, CheckCheck } from "lucide-react";
+import {
+  Copy,
+  ExternalLink,
+  BarChart3,
+  Loader2,
+  CheckCheck,
+} from "lucide-react";
 import { HistoryStats } from "./HistoryStats";
 
 interface HistoryItemProps {
@@ -62,12 +68,19 @@ export function HistoryItem({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {isCopied ? "Copied to clipboard!" : "Click to copy this link"}
+                    {isCopied
+                      ? "Copied to clipboard!"
+                      : "Click to copy this link"}
                   </TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon-sm" asChild className="shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      asChild
+                      className="shrink-0"
+                    >
                       <a
                         href={item.shortUrl}
                         target="_blank"
@@ -119,4 +132,3 @@ export function HistoryItem({
     </Card>
   );
 }
-
