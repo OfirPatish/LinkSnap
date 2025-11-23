@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { shortenUrl } from "@/lib/api/url";
 import type { ShortenResponse } from "@/types";
 import { addToHistory } from "@/lib/storage/history";
@@ -14,35 +14,63 @@ interface UrlFormProps {
 /**
  * URL Shortener Form Component
  * Handles URL input, validation, and submission
+ * Automatically cancels requests on unmount to prevent memory leaks
  */
 export function UrlForm({ onSuccess }: UrlFormProps) {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup on unmount - cancel pending request
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // Cancel previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
 
     if (!url.trim()) {
       setError("Please paste a URL to get started");
       return;
     }
 
+    // Create new AbortController for this request
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setLoading(true);
     try {
-      const result = await shortenUrl(url.trim());
+      const result = await shortenUrl(url.trim(), controller.signal);
 
-      addToHistory({
-        slug: result.slug,
-        shortUrl: result.shortUrl,
-        url: result.url,
-        createdAt: new Date().toISOString(),
-      });
+      // Only update if request wasn't aborted
+      if (!controller.signal.aborted) {
+        addToHistory({
+          slug: result.slug,
+          shortUrl: result.shortUrl,
+          url: result.url,
+          createdAt: new Date().toISOString(),
+        });
 
-      setUrl("");
-      onSuccess(result);
+        setUrl("");
+        onSuccess(result);
+      }
     } catch (err) {
+      // Don't show error for aborted requests
+      if (err instanceof Error && err.name === "AbortError") {
+        return;
+      }
+
       // Display backend error message directly (backend provides user-friendly messages)
       const errorMessage =
         err instanceof Error
@@ -50,7 +78,10 @@ export function UrlForm({ onSuccess }: UrlFormProps) {
           : "Something went wrong. Please try again.";
       setError(errorMessage);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
+      abortControllerRef.current = null;
     }
   };
 

@@ -25,26 +25,50 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Create a fetch request with timeout
+ * Supports both timeout and external abort signal
  */
 async function fetchWithTimeout(
   url: string,
   options: RequestInit = {},
   timeout: number = REQUEST_TIMEOUT
 ): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => timeoutController.abort(), timeout);
+
+  // Combine signals if external signal is provided
+  let signal: AbortSignal;
+  if (options.signal) {
+    // Create a combined signal that aborts when either signal aborts
+    const combinedController = new AbortController();
+    const abort = () => {
+      clearTimeout(timeoutId);
+      combinedController.abort();
+    };
+    
+    // Listen to both signals
+    options.signal.addEventListener("abort", abort);
+    timeoutController.signal.addEventListener("abort", abort);
+    
+    signal = combinedController.signal;
+  } else {
+    signal = timeoutController.signal;
+  }
 
   try {
     const response = await fetch(url, {
       ...options,
-      signal: controller.signal,
+      signal,
     });
     clearTimeout(timeoutId);
     return response;
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof Error && error.name === "AbortError") {
-      throw new Error("Request timeout - please check your connection");
+      // Check if it was a timeout or external cancellation
+      if (timeoutController.signal.aborted) {
+        throw new Error("Request timeout - please check your connection");
+      }
+      throw new Error("Request cancelled");
     }
     throw error;
   }
@@ -119,16 +143,25 @@ async function handleResponse<T>(
 
 /**
  * Shorten a URL with retry logic and timeout
+ * @param url - The URL to shorten
+ * @param signal - Optional AbortSignal to cancel the request
  */
-export async function shortenUrl(url: string): Promise<ShortenResponse> {
+export async function shortenUrl(
+  url: string,
+  signal?: AbortSignal
+): Promise<ShortenResponse> {
   return retryWithBackoff(async () => {
-    const response = await fetchWithTimeout(`${API_BASE}/shorten`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ url }),
-    });
+    const response = await fetchWithTimeout(
+      `${API_BASE}/shorten`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+        signal, // Add signal support
+      }
+    );
 
     return handleResponse<ShortenResponse>(
       response,
@@ -139,10 +172,17 @@ export async function shortenUrl(url: string): Promise<ShortenResponse> {
 
 /**
  * Get stats for a slug with retry logic and timeout
+ * @param slug - The slug to get stats for
+ * @param signal - Optional AbortSignal to cancel the request
  */
-export async function getStats(slug: string): Promise<StatsResponse> {
+export async function getStats(
+  slug: string,
+  signal?: AbortSignal
+): Promise<StatsResponse> {
   return retryWithBackoff(async () => {
-    const response = await fetchWithTimeout(`${API_BASE}/stats/${slug}`);
+    const response = await fetchWithTimeout(`${API_BASE}/stats/${slug}`, {
+      signal, // Add signal support
+    });
 
     return handleResponse<StatsResponse>(response, "Failed to get stats");
   });

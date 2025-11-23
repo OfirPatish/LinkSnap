@@ -4,7 +4,7 @@ import compression from "compression";
 import shortenRouter from "./routes/shorten.js";
 import redirectRouter from "./routes/redirect.js";
 import statsRouter from "./routes/stats.js";
-import { initDb } from "./db.js";
+import { initDb, checkDbHealth } from "./db.js";
 import { corsMiddleware } from "./middleware/cors.js";
 import { apiLimiter, shortenLimiter } from "./middleware/rateLimit.js";
 import { securityHeaders } from "./middleware/security.js";
@@ -36,8 +36,22 @@ app.use("/api/shorten", shortenLimiter, shortenRouter);
 app.use("/api/stats", apiLimiter, statsRouter);
 
 // Health check (must be before redirect router)
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
+app.get("/health", async (req, res) => {
+  const dbHealthy = await checkDbHealth();
+  
+  if (!dbHealthy) {
+    return res.status(503).json({
+      status: "unhealthy",
+      database: "disconnected",
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  res.json({
+    status: "ok",
+    database: "connected",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 app.use("/", redirectRouter); // Must be last to catch slug routes

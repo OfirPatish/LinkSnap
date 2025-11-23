@@ -1,17 +1,13 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { findLinkBySlug, incrementClicks } from "../url.service.js";
 import { NotFoundError } from "../utils/errors.js";
+import { validateSlug } from "../middleware/validateSlug.js";
 
 const router = Router();
 
-router.get("/:slug", (req: Request, res: Response, next: NextFunction) => {
+router.get("/:slug", validateSlug, (req: Request, res: Response, next: NextFunction) => {
   try {
     const { slug } = req.params;
-
-    // Validate slug format (alphanumeric, length check)
-    if (!slug || slug.length < 3 || slug.length > 20) {
-      return next(new NotFoundError("Invalid short link format"));
-    }
 
     const link = findLinkBySlug(slug);
 

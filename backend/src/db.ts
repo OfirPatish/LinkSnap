@@ -19,6 +19,10 @@ if (!fs.existsSync(dbDir)) {
 class Database {
   private db: SqlJsDatabase | null = null;
   private initialized = false;
+  private saveTimer: NodeJS.Timeout | null = null;
+  private pendingWrites = 0;
+  private readonly SAVE_INTERVAL = 5000; // Save every 5 seconds
+  private readonly MAX_PENDING_WRITES = 10; // Or save after 10 writes
 
   async init() {
     if (this.initialized) return;
@@ -79,6 +83,39 @@ class Database {
     return new Statement(this.db, sql);
   }
 
+  /**
+   * Schedule a database save (batched for performance)
+   * Saves immediately if too many writes are pending, otherwise schedules a delayed save
+   */
+  scheduleSave() {
+    if (!this.db) return;
+
+    this.pendingWrites++;
+
+    // Save immediately if too many pending writes
+    if (this.pendingWrites >= this.MAX_PENDING_WRITES) {
+      this.save();
+      this.pendingWrites = 0;
+      if (this.saveTimer) {
+        clearTimeout(this.saveTimer);
+        this.saveTimer = null;
+      }
+      return;
+    }
+
+    // Otherwise, schedule a save if not already scheduled
+    if (!this.saveTimer) {
+      this.saveTimer = setTimeout(() => {
+        this.save();
+        this.pendingWrites = 0;
+        this.saveTimer = null;
+      }, this.SAVE_INTERVAL);
+    }
+  }
+
+  /**
+   * Force immediate save to disk
+   */
   save() {
     if (!this.db) return;
     const data = this.db.export();
@@ -88,6 +125,12 @@ class Database {
 
   close() {
     if (this.db) {
+      // Clear any pending save timer
+      if (this.saveTimer) {
+        clearTimeout(this.saveTimer);
+        this.saveTimer = null;
+      }
+      // Force save before closing
       this.save();
       this.db.close();
       this.db = null;
@@ -98,6 +141,10 @@ class Database {
   pragma(setting: string) {
     // sql.js doesn't have pragma support like better-sqlite3
     // This is a no-op for compatibility
+  }
+
+  get isInitialized(): boolean {
+    return this.initialized;
   }
 }
 
@@ -115,10 +162,8 @@ class Statement {
       this.stmt.bind(params);
       this.stmt.step();
       this.stmt.reset();
-      // Save after each write operation
-      const data = this.db.export();
-      const buffer = Buffer.from(data);
-      fs.writeFileSync(dbPath, buffer);
+      // Schedule save instead of immediate save for better performance
+      db.scheduleSave();
     } catch (err: any) {
       this.stmt.reset();
       // Convert sql.js errors to better-sqlite3-like error format
@@ -159,6 +204,24 @@ export async function initDb() {
     initPromise = db.init();
   }
   await initPromise;
+}
+
+/**
+ * Check database health by performing a simple query
+ * @returns true if database is healthy, false otherwise
+ */
+export async function checkDbHealth(): Promise<boolean> {
+  try {
+    if (!db.isInitialized) {
+      return false;
+    }
+    // Simple query to check database connectivity
+    const stmt = db.prepare("SELECT 1");
+    stmt.get();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Export the db instance

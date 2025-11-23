@@ -3,6 +3,8 @@
  */
 
 export const SLUG_LENGTH = 7;
+export const SLUG_MIN_LENGTH = 3;
+export const SLUG_MAX_LENGTH = 20;
 export const MAX_RETRIES = 5;
 export const MAX_URL_LENGTH = 2048;
 export const DEFAULT_PORT = 4000;
