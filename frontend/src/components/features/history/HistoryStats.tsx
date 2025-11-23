@@ -10,7 +10,6 @@ interface HistoryStatsProps {
 
 /**
  * Component to display statistics for a shortened URL
- * Clean Shadcn-inspired design with proper spacing and typography
  */
 export function HistoryStats({ stats }: HistoryStatsProps) {
   const isActive = stats.clicks > 0;
@@ -61,3 +60,4 @@ export function HistoryStats({ stats }: HistoryStatsProps) {
     </CardContent>
   );
 }
+

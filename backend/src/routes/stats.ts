@@ -1,19 +1,28 @@
-import { Router, Request, Response } from 'express';
-import { getLinkStats } from '../url.service.js';
+import { Router, Request, Response, NextFunction } from "express";
+import { getLinkStats } from "../url.service.js";
+import { NotFoundError } from "../utils/errors.js";
 
 const router = Router();
 
-router.get('/:slug', (req: Request, res: Response) => {
-  const { slug } = req.params;
-  
-  const stats = getLinkStats(slug);
-  
-  if (!stats) {
-    return res.status(404).json({ error: 'Short link not found' });
+router.get("/:slug", (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { slug } = req.params;
+
+    // Validate slug format
+    if (!slug || slug.length < 3 || slug.length > 20) {
+      return next(new NotFoundError("Invalid short link format"));
+    }
+
+    const stats = getLinkStats(slug);
+
+    if (!stats) {
+      return next(new NotFoundError("Short link not found"));
+    }
+
+    res.json(stats);
+  } catch (error) {
+    next(error);
   }
-  
-  res.json(stats);
 });
 
 export default router;
-

@@ -1,51 +1,45 @@
-import { UrlForm } from "./components/UrlForm";
-import { HistoryList } from "./components/HistoryList";
-import { HeroSection } from "./components/sections/HeroSection";
-import { Footer } from "./components/sections/Footer";
-import { useUrlShortening } from "./hooks/useUrlShortening";
+import { UrlForm } from "@/components/features/url-shortener/UrlForm";
+import { HistoryList } from "@/components/features/history/HistoryList";
+import { HeroSection } from "@/components/layout/HeroSection";
+import { Footer } from "@/components/layout/Footer";
+import { useUrlShortening } from "@/hooks/useUrlShortening";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 function App() {
   const { refreshTrigger, handleSuccess } = useUrlShortening();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden flex items-center">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 max-w-5xl relative z-10 w-full">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 relative overflow-hidden">
+      {/* Subtle grid pattern background */}
+      <div className="absolute inset-0 -z-10 opacity-[0.02] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-        {/* Hero Section with Integrated Form */}
-        <section className="mb-12 sm:mb-16 lg:mb-20">
+      {/* Gradient orbs */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-72 h-72 bg-primary/8 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-4xl relative z-10">
+        {/* Header Section */}
+        <header className="text-center mb-8 sm:mb-12">
           <HeroSection />
+        </header>
 
-          {/* Main Form Card */}
-          <Card className="max-w-3xl mx-auto border shadow-lg">
-            <CardContent className="pt-8 pb-8 sm:pt-10 sm:pb-10">
+        {/* Main URL Shortener Section */}
+        <section className="mb-12 sm:mb-16">
+          <Card className="border-2 shadow-2xl bg-card/98 backdrop-blur-md">
+            <CardContent className="p-6 sm:p-8 lg:p-10">
               <UrlForm onSuccess={handleSuccess} />
             </CardContent>
           </Card>
-
-          {/* Use Cases - Below Form */}
-          <div className="mt-8 sm:mt-10 max-w-3xl mx-auto">
-            <p className="text-center text-sm text-muted-foreground mb-4 font-medium">
-              Perfect for social media, marketing, and sharing
-            </p>
-          </div>
         </section>
 
-        <main className="space-y-8 sm:space-y-10 lg:space-y-12">
-          {/* Separator */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Separator className="flex-1" />
-            <span className="text-xs sm:text-sm text-muted-foreground font-medium whitespace-nowrap">
-              Your Links
-            </span>
-            <Separator className="flex-1" />
-          </div>
-
-          {/* History Section */}
+        {/* History Section */}
+        <main className="mb-8">
           <HistoryList refreshTrigger={refreshTrigger} />
         </main>
 
+        {/* Footer */}
         <Footer />
       </div>
     </div>

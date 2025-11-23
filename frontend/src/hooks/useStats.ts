@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getStats } from "@/lib/api";
+import { getStats } from "@/lib/api/url";
 import type { StatsResponse } from "@/types";
 
 /**

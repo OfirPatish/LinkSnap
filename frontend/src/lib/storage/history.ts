@@ -1,6 +1,9 @@
 import type { HistoryItem } from "@/types";
 import { STORAGE_KEY, MAX_HISTORY_ITEMS } from "@/constants";
 
+/**
+ * Get all history items from localStorage
+ */
 export function getHistory(): HistoryItem[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -10,6 +13,9 @@ export function getHistory(): HistoryItem[] {
   }
 }
 
+/**
+ * Add a new item to history
+ */
 export function addToHistory(item: HistoryItem): void {
   try {
     const history = getHistory();
@@ -36,3 +42,4 @@ export function clearHistory(): void {
     // Ignore storage errors
   }
 }
+

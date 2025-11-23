@@ -1,5 +1,3 @@
-import { Separator } from "@/components/ui/separator";
-
 /**
  * Footer component with copyright and technology credits
  */
@@ -15,3 +13,4 @@ export function Footer() {
     </footer>
   );
 }
+

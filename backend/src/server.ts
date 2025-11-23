@@ -1,25 +1,39 @@
 import express from "express";
 import dotenv from "dotenv";
+import compression from "compression";
 import shortenRouter from "./routes/shorten.js";
 import redirectRouter from "./routes/redirect.js";
 import statsRouter from "./routes/stats.js";
 import { initDb } from "./db.js";
 import { corsMiddleware } from "./middleware/cors.js";
+import { apiLimiter, shortenLimiter } from "./middleware/rateLimit.js";
+import { securityHeaders } from "./middleware/security.js";
+import { requestLogger } from "./middleware/logger.js";
+import { getEnv } from "./utils/env.js";
 import { DEFAULT_PORT } from "./constants/index.js";
+import { AppError } from "./utils/errors.js";
 
 dotenv.config();
 
-const PORT = Number(process.env.PORT) || DEFAULT_PORT;
+// Validate environment variables
+const env = getEnv();
+const PORT = env.PORT || DEFAULT_PORT;
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(corsMiddleware);
+// Trust proxy for accurate IP addresses behind reverse proxies
+app.set("trust proxy", 1);
 
-// Routes
-app.use("/api/shorten", shortenRouter);
-app.use("/api/stats", statsRouter);
+// Middleware
+app.use(compression()); // Enable gzip compression
+app.use(express.json({ limit: "10mb" })); // Limit JSON payload size
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(securityHeaders); // Security headers
+app.use(requestLogger); // Request logging
+app.use(corsMiddleware); // CORS
+
+// Routes with rate limiting
+app.use("/api/shorten", shortenLimiter, shortenRouter);
+app.use("/api/stats", apiLimiter, statsRouter);
 
 // Health check (must be before redirect router)
 app.get("/health", (req, res) => {
@@ -36,8 +50,38 @@ app.use(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    // Log error details
+    console.error("Error:", {
+      message: err.message,
+      stack: err.stack,
+      path: req.path,
+      method: req.method,
+      ip: req.ip,
+    });
+
+    // Handle known application errors
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({
+        error: err.message,
+      });
+    }
+
+    // Handle Zod validation errors
+    if (err.name === "ZodError") {
+      return res.status(400).json({
+        error: "Validation error",
+        details: (err as any).errors,
+      });
+    }
+
+    // Default error response
+    const statusCode = (err as any).statusCode || 500;
+    const message =
+      env.NODE_ENV === "production" ? "Internal server error" : err.message;
+
+    res.status(statusCode).json({
+      error: message,
+    });
   }
 );
 
