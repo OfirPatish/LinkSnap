@@ -2,79 +2,55 @@
 
 A modern full-stack URL shortener application demonstrating clean architecture, TypeScript best practices, and modern React patterns.
 
-## 🌐 Live Demo
-
-Check out the live application: **[https://linksnap-frontend.onrender.com](https://linksnap-frontend.onrender.com)**
+**🌐 Live Demo:** [https://linksnap-frontend.onrender.com](https://linksnap-frontend.onrender.com)
 
 ## 🚀 Tech Stack
 
-**Backend:** Node.js 20+ | Express | SQLite (sql.js) | TypeScript | nanoid | zod  
-**Frontend:** React 19 | TypeScript | Vite | Custom Hooks | shadcn/ui | Tailwind CSS
+**Backend:** Node.js 20+, Express, SQLite (sql.js), TypeScript, nanoid, zod  
+**Frontend:** React 19, TypeScript, Vite, shadcn/ui, Tailwind CSS  
+**State Management:** Custom hooks
 
 ## ✨ Key Features
 
-- 🔗 Shorten long URLs into compact, shareable links
-- 📊 Track click statistics for each short link
-- 📋 One-click copy functionality
-- 📜 Local history with persistent storage
-- 🎨 Modern, responsive UI
+- **URL Shortening:** Convert long URLs into compact, shareable links
+- **Click Statistics:** Track click statistics for each short link
+- **One-Click Copy:** Instant copy functionality for easy sharing
+- **Local History:** Persistent storage for shortened URLs
+- **Responsive Design:** Modern, mobile-first UI design
 
 ## 🏃 Quick Start
 
-### Option 1: Run Both Together (Recommended)
+### Prerequisites
+- Node.js 20+
 
+### Backend Setup
 ```bash
-# Install all dependencies
-npm run install:all
-
-# Run both frontend and backend
+cd backend
+npm install
+# Optional: Create .env with PORT=4000, BASE_URL
 npm run dev
 ```
 
-### Option 2: Run Separately
-
+### Frontend Setup
 ```bash
-# Backend
-cd backend && npm install
-npm run dev
-
-# Frontend (new terminal)
-cd frontend && npm install
+cd frontend
+npm install
 npm run dev
 ```
 
-Visit `http://localhost:5173` (Frontend) | `http://localhost:4000` (Backend)
+**Ports:** Backend (4000) | Frontend (5173)
 
-## 📁 Architecture
+## 📁 Project Structure
 
-Clean, scalable architecture with separation of concerns:
+```
+linksnap/
+├── backend/     # Express API with TypeScript and SQLite
+└── frontend/    # React application with Vite
+```
 
-- **Backend:** routes → services → database | Type-safe API with Zod validation
-- **Frontend:** Custom hooks | Component composition | Type-safe API client
-- **Database:** SQLite automatically created on first run
+## 🔒 Security & Validation
 
-## 🎯 Highlights
-
-- **Performance:** Optimized re-renders, efficient state management
-- **UX:** Form validation, loading states, one-click copy
-- **Code Quality:** TypeScript, consistent patterns, clean architecture
-- **Type Safety:** End-to-end type safety with Zod validation
-
-## 📦 What's Included
-
-- URL shortening with custom slugs
-- Click statistics tracking
-- Local history management
-- Responsive design for all devices
-
-## 🔧 Environment Variables
-
-**Backend (Optional):** `PORT`, `BASE_URL` - Works out of the box with defaults
-
-## 📄 License
-
-MIT License
-
----
-
-**Built with modern best practices** | Ready for production deployment
+- Type-safe API with Zod validation
+- Input validation and sanitization
+- SQL injection prevention (parameterized queries)
+- End-to-end type safety
