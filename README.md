@@ -2,6 +2,8 @@
 
 A full-stack TypeScript application demonstrating clean architecture, modern React patterns, and production-ready backend development.
 
+**🌐 Live Demo:** https://linksnap-frontend.onrender.com/
+
 ## 🚀 Tech Stack
 
 **Backend:** Node.js, Express, TypeScript, SQLite (better-sqlite3), Pino logging, Helmet security  
