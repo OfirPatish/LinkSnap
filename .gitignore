@@ -42,6 +42,10 @@ logs/
 # Testing
 coverage/
 .nyc_output/
+frontend/tests/
+frontend/test-results/
+frontend/*.test.html
+frontend/*.test.local.*
 
 # Temporary files
 tmp/
