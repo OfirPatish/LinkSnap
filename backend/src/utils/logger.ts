@@ -29,7 +29,7 @@ export const logger = pino({
     },
     log: (object) => {
       // Add icon and context formatting to the log object
-      const level = object.level || 20;
+      const level = typeof object.level === "number" ? object.level : 20;
       const icons: Record<number, string> = {
         10: "🔍",
         20: "ℹ️ ",

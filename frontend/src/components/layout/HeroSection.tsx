@@ -1,4 +1,4 @@
-import { Link2, Zap, Shield, Clock } from "lucide-react";
+import { Zap, Shield, Clock } from "lucide-react";
 
 /**
  * Hero section component - Compact and focused for URL shortener
