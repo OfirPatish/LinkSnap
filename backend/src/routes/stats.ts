@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { getLinkStats } from "../url.service.js";
+import { getLinkStats } from "../services/url.js";
 import { NotFoundError } from "../utils/errors.js";
 import { validateSlug } from "../middleware/validateSlug.js";
 

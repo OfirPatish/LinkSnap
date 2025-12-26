@@ -41,27 +41,29 @@ export function HistoryList({ refreshTrigger }: HistoryListProps) {
 
   return (
     <TooltipProvider>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pb-2 border-b">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-              Your Shortened Links
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex items-center justify-between pb-3 border-b gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-foreground truncate">
+              Recent Links
             </h2>
-            <Badge variant="secondary" className="font-mono shrink-0">
+            <Badge
+              variant="secondary"
+              className="font-mono text-xs px-1.5 sm:px-2 py-0.5 shrink-0"
+            >
               {history.length}
             </Badge>
           </div>
           {history.length > 0 && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => setShowConfirmClear(true)}
-              className="shrink-0"
+              className="h-9 sm:h-8 px-2 sm:px-3 text-xs shrink-0 touch-manipulation"
               aria-label="Clear all history"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Clear All</span>
-              <span className="sm:hidden">Clear</span>
+              <Trash2 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Clear</span>
             </Button>
           )}
         </div>
@@ -102,7 +104,7 @@ export function HistoryList({ refreshTrigger }: HistoryListProps) {
           </Alert>
         )}
 
-        <div className="grid gap-4">
+        <div className="grid gap-3 sm:gap-4">
           {history.map((item, index) => {
             const itemStats = getStatsForSlug(item.slug);
             const isLoading = isLoadingStats(item.slug);

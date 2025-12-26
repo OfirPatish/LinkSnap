@@ -1,50 +1,30 @@
-# LinkSnap - URL Shortener
+# LinkSnap - Modern URL Shortener
 
-A modern full-stack URL shortener application demonstrating clean architecture, TypeScript best practices, and modern React patterns.
-
-**🌐 Live Demo:** [https://linksnap-frontend.onrender.com](https://linksnap-frontend.onrender.com)
+A full-stack TypeScript application demonstrating clean architecture, modern React patterns, and production-ready backend development.
 
 ## 🚀 Tech Stack
 
-**Backend:** Node.js 20+, Express, SQLite (sql.js), TypeScript, nanoid, zod, express-rate-limit, compression  
-**Frontend:** React 19, TypeScript, Vite, shadcn/ui, Tailwind CSS  
-**State Management:** Custom hooks  
-**Deployment:** Render (or any Node.js hosting platform)
+**Backend:** Node.js, Express, TypeScript, SQLite (better-sqlite3), Pino logging, Helmet security  
+**Frontend:** React 19, TypeScript, Vite, Tailwind CSS, Shadcn UI  
+**Architecture:** RESTful API, custom hooks, structured logging, error boundaries
 
-## ✨ Key Features
+## ✨ Features
 
-- **URL Shortening:** Convert long URLs into compact, shareable links
-- **Click Statistics:** Track click statistics for each short link
-- **One-Click Copy:** Instant copy functionality for easy sharing
-- **Local History:** Persistent storage for shortened URLs
-- **Responsive Design:** Modern, mobile-first UI design
-- **Error Handling:** Comprehensive error boundaries and retry logic
-- **Accessibility:** ARIA labels, keyboard navigation, screen reader support
-- **Performance:** Request compression, caching, and optimization
+- **URL Shortening** - Generate short, shareable links with unique slugs
+- **Click Analytics** - Track click statistics for each shortened URL
+- **Modern UI** - Responsive, mobile-first design with smooth animations
+- **Type Safety** - Full TypeScript coverage with Zod validation
+- **Performance** - In-memory caching, database optimization, request compression
+- **Security** - Rate limiting, input sanitization, security headers, CORS
+- **Developer Experience** - Structured logging, error handling, graceful shutdown
 
 ## 🏃 Quick Start
 
-### Prerequisites
-
-- Node.js 20+
-
-### Local Development
-
-#### Backend Setup
-
 ```bash
-cd backend
-npm install
-# Copy .env.example to .env and configure if needed
-npm run dev
-```
+# Install dependencies
+npm run install:all
 
-#### Frontend Setup
-
-```bash
-cd frontend
-npm install
-# Copy .env.example to .env and configure if needed
+# Run both backend and frontend
 npm run dev
 ```
 
@@ -54,46 +34,38 @@ npm run dev
 
 ```
 linksnap/
-├── backend/     # Express API with TypeScript and SQLite
+├── backend/     # Express API with TypeScript
 └── frontend/    # React application with Vite
 ```
 
-## 🔒 Security & Validation
+## 🔧 Environment Setup
 
-- **Rate Limiting:** Prevents abuse with configurable limits (10 req/min for shortening, 100 req/15min for general API)
-- **Security Headers:** X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, CSP
-- **Type-safe API:** Zod validation for all inputs
-- **Input Validation:** URL format validation and sanitization
-- **SQL Injection Prevention:** Parameterized queries
-- **Error Handling:** Custom error classes with proper status codes
-- **Request Logging:** Comprehensive request/response logging
-- **Environment Validation:** Zod-based environment variable validation
-
-## 🎯 Additional Features
-
-- **Error Boundaries:** React error boundaries for graceful error handling
-- **Request Retry Logic:** Automatic retry with exponential backoff for failed requests
-- **Request Timeouts:** 10-second timeout for all API requests
-- **Compression:** Gzip compression for improved performance
-- **Accessibility:** Full ARIA support, keyboard navigation, screen reader compatibility
-- **Health Checks:** Built-in health check endpoints for monitoring
-
-## 📝 Environment Variables
-
-### Backend (.env)
+### Backend
 
 ```env
 PORT=4000
 NODE_ENV=development
 BASE_URL=http://localhost:4000
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
-DB_PATH=./data
+ALLOWED_ORIGINS=http://localhost:5173
 ```
 
-### Frontend (.env)
+### Frontend
 
 ```env
 VITE_API_BASE=/api
 ```
 
-See `.env.example` files in each directory for more details.
+## 🎯 Key Highlights
+
+- **Clean Architecture** - Separation of concerns with routes, services, middleware, and utilities
+- **Type Safety** - End-to-end TypeScript with strict type checking
+- **Error Handling** - Custom error classes, retry logic with exponential backoff, error boundaries
+- **Security** - Helmet security headers, input sanitization, rate limiting, SQL injection prevention
+- **Performance** - Native SQLite, WAL mode, in-memory caching, optimized queries
+- **Logging** - Structured logging with Pino (JSON in production, pretty in development)
+- **Testing** - Jest test suite with integration tests
+- **Accessibility** - ARIA labels, keyboard navigation, screen reader support
+
+## 📝 License
+
+MIT

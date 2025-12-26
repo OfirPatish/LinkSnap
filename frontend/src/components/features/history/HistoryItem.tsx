@@ -40,104 +40,105 @@ export function HistoryItem({
 }: HistoryItemProps) {
   return (
     <Card
-      className="transition-all hover:shadow-md border animate-in fade-in slide-in-from-bottom-2 bg-card group"
+      className="border transition-all hover:shadow-md"
       style={{ animationDelay: `${animationDelay}ms` }}
     >
-      <CardHeader className="pb-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex-1 min-w-0 space-y-3 w-full">
-            {/* Short URL */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <code className="text-sm sm:text-base font-semibold text-primary font-mono bg-primary/10 px-3 py-2 rounded-lg border border-primary/20 break-all hover:bg-primary/15 transition-colors">
-                {item.shortUrl}
-              </code>
-              <div className="flex items-center gap-1 shrink-0">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={onCopy}
-                      className="shrink-0"
-                      aria-label={
-                        isCopied
-                          ? "Copied to clipboard"
-                          : "Copy short link to clipboard"
-                      }
+      <CardHeader className="pb-3 sm:pb-4">
+        <div className="space-y-3">
+          {/* Short URL Row */}
+          <div className="flex items-start gap-2">
+            <code className="flex-1 min-w-0 text-xs sm:text-sm font-medium text-primary font-mono bg-primary/5 px-2 sm:px-3 py-2 rounded-md border border-primary/10 break-all">
+              {item.shortUrl}
+            </code>
+            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onCopy}
+                    className="h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
+                    aria-label={
+                      isCopied
+                        ? "Copied to clipboard"
+                        : "Copy short link to clipboard"
+                    }
+                  >
+                    {isCopied ? (
+                      <CheckCheck
+                        className="h-4 w-4 sm:h-5 sm:w-5 text-green-600"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <Copy
+                        className="h-4 w-4 sm:h-5 sm:w-5"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isCopied
+                    ? "Copied to clipboard!"
+                    : "Click to copy this link"}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    className="h-9 w-9 sm:h-10 sm:w-10 touch-manipulation"
+                  >
+                    <a
+                      href={item.shortUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Open short link in new tab"
                     >
-                      {isCopied ? (
-                        <CheckCheck
-                          className="h-4 w-4 text-green-600"
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <Copy className="h-4 w-4" aria-hidden="true" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {isCopied
-                      ? "Copied to clipboard!"
-                      : "Click to copy this link"}
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      asChild
-                      className="shrink-0"
-                    >
-                      <a
-                        href={item.shortUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="Open short link in new tab"
-                      >
-                        <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                      </a>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Test this link in a new tab</TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-
-            {/* Original URL */}
-            <div className="flex items-start gap-2">
-              <div
-                className="text-sm text-muted-foreground break-words max-w-full truncate sm:whitespace-normal"
-                title={item.url}
-              >
-                <span className="text-muted-foreground/60 mr-2">→</span>
-                <span className="hover:text-foreground transition-colors">
-                  {item.url}
-                </span>
-              </div>
+                      <ExternalLink
+                        className="h-4 w-4 sm:h-5 sm:w-5"
+                        aria-hidden="true"
+                      />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Open in new tab</TooltipContent>
+              </Tooltip>
             </div>
           </div>
 
-          {/* Stats Button */}
-          <Button
-            variant={stats ? "default" : "outline"}
-            size="sm"
-            onClick={onToggleStats}
-            disabled={isLoadingStats}
-            className="shrink-0 w-full sm:w-auto"
-            aria-label={stats ? "Hide statistics" : "View statistics"}
-            aria-expanded={!!stats}
-          >
-            {isLoadingStats ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <BarChart3 className="h-4 w-4" aria-hidden="true" />
-            )}
-            <span className="ml-2 hidden sm:inline">
-              {stats ? "Hide Stats" : "View Stats"}
-            </span>
-            <span className="ml-2 sm:hidden">{stats ? "Hide" : "Stats"}</span>
-          </Button>
+          {/* Original URL */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <p
+              className="text-xs sm:text-sm text-muted-foreground break-words flex-1 min-w-0"
+              title={item.url}
+            >
+              {item.url}
+            </p>
+            <Button
+              variant={stats ? "default" : "outline"}
+              size="sm"
+              onClick={onToggleStats}
+              disabled={isLoadingStats}
+              className="h-9 sm:h-8 px-3 sm:px-3 text-xs w-full sm:w-auto touch-manipulation shrink-0"
+              aria-label={stats ? "Hide statistics" : "View statistics"}
+              aria-expanded={!!stats}
+            >
+              {isLoadingStats ? (
+                <Loader2
+                  className="h-3.5 w-3.5 animate-spin"
+                  aria-hidden="true"
+                />
+              ) : (
+                <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              <span className="ml-1.5 hidden sm:inline">
+                {stats ? "Hide" : "Stats"}
+              </span>
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
@@ -146,4 +147,3 @@ export function HistoryItem({
     </Card>
   );
 }
-

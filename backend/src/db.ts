@@ -1,13 +1,33 @@
-import initSqlJs, { Database as SqlJsDatabase } from "sql.js";
+import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import { logger } from "./utils/logger.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Get database directory path
+// Avoid import.meta.url to prevent Jest parsing issues
+// Use process.cwd() which works in both Jest and production environments
+const getDbDir = (): string => {
+  // If DB_PATH is explicitly set, use it (relative to process.cwd())
+  if (process.env.DB_PATH) {
+    return path.resolve(process.cwd(), process.env.DB_PATH);
+  }
 
-// Use environment variable for database path, or default to data folder
-const dbDir = process.env.DB_PATH || path.join(__dirname, "..", "data");
+  // Check if we're in Jest environment (Jest sets JEST_WORKER_ID)
+  const isJest =
+    typeof process !== "undefined" && process.env.JEST_WORKER_ID !== undefined;
+
+  if (isJest) {
+    // Jest environment - process.cwd() is typically the backend directory
+    // Default to ./data relative to backend directory
+    return path.resolve(process.cwd(), "data");
+  } else {
+    // Production environment - process.cwd() should be the backend directory
+    // Default to ./data relative to backend directory
+    return path.resolve(process.cwd(), "data");
+  }
+};
+
+const dbDir = getDbDir();
 const dbPath = path.join(dbDir, "linksnap.db");
 
 // Ensure data directory exists
@@ -15,208 +35,94 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-// Wrapper to provide better-sqlite3-like API
-class Database {
-  private db: SqlJsDatabase | null = null;
-  private initialized = false;
-  private saveTimer: NodeJS.Timeout | null = null;
-  private pendingWrites = 0;
-  private readonly SAVE_INTERVAL = 5000; // Save every 5 seconds
-  private readonly MAX_PENDING_WRITES = 10; // Or save after 10 writes
+// Database instance
+let dbInstance: Database.Database | null = null;
+let initialized = false;
 
-  async init() {
-    if (this.initialized) return;
+/**
+ * Initialize database connection and run migrations
+ */
+export function initDb(): void {
+  if (initialized && dbInstance) {
+    return;
+  }
 
-    // Load sql.js - for Node.js, locate WASM file from node_modules
-    const SQL = await initSqlJs({
-      locateFile: (file: string) => {
-        // Try to find sql-wasm.wasm in node_modules
-        const wasmPath = path.join(
-          __dirname,
-          "..",
-          "node_modules",
-          "sql.js",
-          "dist",
-          file
-        );
-        if (fs.existsSync(wasmPath)) {
-          return wasmPath;
+  // Create database connection with optimizations
+  dbInstance = new Database(dbPath, {
+    verbose: process.env.NODE_ENV === "development" 
+      ? (message?: unknown, ...additionalArgs: unknown[]) => {
+          const sql = typeof message === "string" ? message : String(message);
+          logger.debug({ sql, args: additionalArgs }, "SQL query");
         }
-        // Fallback to default behavior
-        return file;
-      },
-    });
+      : undefined,
+  });
 
-    // Try to load existing database, or create new one
-    let buffer: Uint8Array | undefined;
-    if (fs.existsSync(dbPath)) {
-      buffer = new Uint8Array(fs.readFileSync(dbPath));
-    }
+  // Enable WAL mode for better concurrency
+  dbInstance.pragma("journal_mode = WAL");
 
-    this.db = new SQL.Database(buffer);
-    this.initialized = true;
+  // Optimize for performance
+  dbInstance.pragma("synchronous = NORMAL");
+  dbInstance.pragma("cache_size = 10000");
+  dbInstance.pragma("foreign_keys = ON");
+  dbInstance.pragma("temp_store = MEMORY");
 
-    // Create tables
-    this.exec(`
-      CREATE TABLE IF NOT EXISTS links (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        slug TEXT UNIQUE NOT NULL,
-        url TEXT NOT NULL,
-        clicks INTEGER NOT NULL DEFAULT 0,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-      );
+  // Create tables if they don't exist
+  dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT UNIQUE NOT NULL,
+      url TEXT NOT NULL,
+      clicks INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME,
+      is_active INTEGER NOT NULL DEFAULT 1
+    );
+  `);
 
-      CREATE INDEX IF NOT EXISTS idx_slug ON links(slug);
-    `);
-
-    // Save database
-    this.save();
+  // Check for missing columns and add them (migration)
+  const tableInfo = dbInstance.prepare("PRAGMA table_info(links)").all() as Array<{ name: string }>;
+  const columnNames = tableInfo.map(col => col.name);
+  
+  if (!columnNames.includes('expires_at')) {
+    dbInstance.exec(`ALTER TABLE links ADD COLUMN expires_at DATETIME;`);
+  }
+  
+  if (!columnNames.includes('is_active')) {
+    dbInstance.exec(`ALTER TABLE links ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1;`);
   }
 
-  exec(sql: string) {
-    if (!this.db) throw new Error("Database not initialized");
-    this.db.run(sql);
-  }
+  // Create indexes (only if they don't exist)
+  dbInstance.exec(`
+    CREATE INDEX IF NOT EXISTS idx_slug ON links(slug);
+    CREATE INDEX IF NOT EXISTS idx_expires_at ON links(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_created_at ON links(created_at);
+  `);
 
-  prepare(sql: string) {
-    if (!this.db) throw new Error("Database not initialized");
-    return new Statement(this.db, sql);
-  }
-
-  /**
-   * Schedule a database save (batched for performance)
-   * Saves immediately if too many writes are pending, otherwise schedules a delayed save
-   */
-  scheduleSave() {
-    if (!this.db) return;
-
-    this.pendingWrites++;
-
-    // Save immediately if too many pending writes
-    if (this.pendingWrites >= this.MAX_PENDING_WRITES) {
-      this.save();
-      this.pendingWrites = 0;
-      if (this.saveTimer) {
-        clearTimeout(this.saveTimer);
-        this.saveTimer = null;
-      }
-      return;
-    }
-
-    // Otherwise, schedule a save if not already scheduled
-    if (!this.saveTimer) {
-      this.saveTimer = setTimeout(() => {
-        this.save();
-        this.pendingWrites = 0;
-        this.saveTimer = null;
-      }, this.SAVE_INTERVAL);
-    }
-  }
-
-  /**
-   * Force immediate save to disk
-   */
-  save() {
-    if (!this.db) return;
-    const data = this.db.export();
-    const buffer = Buffer.from(data);
-    fs.writeFileSync(dbPath, buffer);
-  }
-
-  close() {
-    if (this.db) {
-      // Clear any pending save timer
-      if (this.saveTimer) {
-        clearTimeout(this.saveTimer);
-        this.saveTimer = null;
-      }
-      // Force save before closing
-      this.save();
-      this.db.close();
-      this.db = null;
-      this.initialized = false;
-    }
-  }
-
-  pragma(setting: string) {
-    // sql.js doesn't have pragma support like better-sqlite3
-    // This is a no-op for compatibility
-  }
-
-  get isInitialized(): boolean {
-    return this.initialized;
-  }
+  initialized = true;
 }
 
-class Statement {
-  private stmt: any;
-  private db: SqlJsDatabase;
-
-  constructor(db: SqlJsDatabase, sql: string) {
-    this.db = db;
-    this.stmt = db.prepare(sql);
+/**
+ * Get database instance
+ * Throws error if database is not initialized
+ */
+export function getDb(): Database.Database {
+  if (!dbInstance || !initialized) {
+    throw new Error("Database not initialized. Call initDb() first.");
   }
-
-  run(...params: any[]) {
-    try {
-      this.stmt.bind(params);
-      this.stmt.step();
-      this.stmt.reset();
-      // Schedule save instead of immediate save for better performance
-      db.scheduleSave();
-    } catch (err: any) {
-      this.stmt.reset();
-      // Convert sql.js errors to better-sqlite3-like error format
-      if (err && err.message && err.message.includes("UNIQUE")) {
-        const error: any = new Error(err.message);
-        error.code = "SQLITE_CONSTRAINT_UNIQUE";
-        throw error;
-      }
-      throw err;
-    }
-  }
-
-  get(...params: any[]): any {
-    this.stmt.bind(params);
-    const result = this.stmt.step() ? this.stmt.getAsObject() : null;
-    this.stmt.reset();
-    return result;
-  }
-
-  all(...params: any[]): any[] {
-    this.stmt.bind(params);
-    const results: any[] = [];
-    while (this.stmt.step()) {
-      results.push(this.stmt.getAsObject());
-    }
-    this.stmt.reset();
-    return results;
-  }
-}
-
-const db = new Database();
-
-// Initialize database - we'll call this at startup
-let initPromise: Promise<void> | null = null;
-
-export async function initDb() {
-  if (!initPromise) {
-    initPromise = db.init();
-  }
-  await initPromise;
+  return dbInstance;
 }
 
 /**
  * Check database health by performing a simple query
  * @returns true if database is healthy, false otherwise
  */
-export async function checkDbHealth(): Promise<boolean> {
+export function checkDbHealth(): boolean {
   try {
-    if (!db.isInitialized) {
+    if (!dbInstance || !initialized) {
       return false;
     }
     // Simple query to check database connectivity
-    const stmt = db.prepare("SELECT 1");
+    const stmt = dbInstance.prepare("SELECT 1");
     stmt.get();
     return true;
   } catch {
@@ -224,5 +130,43 @@ export async function checkDbHealth(): Promise<boolean> {
   }
 }
 
-// Export the db instance
+/**
+ * Close database connection gracefully
+ */
+export function closeDb(): void {
+  if (dbInstance) {
+    try {
+      dbInstance.close();
+    } catch (error) {
+      logger.error({ err: error, context: "Database" }, "Error closing database");
+    } finally {
+      dbInstance = null;
+      initialized = false;
+    }
+  }
+}
+
+// Handle graceful shutdown
+process.on("SIGINT", () => {
+  closeDb();
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  closeDb();
+  process.exit(0);
+});
+
+// Export default for backward compatibility
+const db = {
+  prepare: (sql: string): Database.Statement => getDb().prepare(sql),
+  exec: (sql: string): Database.Database => getDb().exec(sql),
+  transaction: <T>(fn: () => T): T => {
+    return getDb().transaction(fn)();
+  },
+  get isInitialized(): boolean {
+    return initialized;
+  },
+};
+
 export default db;

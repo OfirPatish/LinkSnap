@@ -1,4 +1,8 @@
-import type { ShortenResponse, StatsResponse } from "@/types";
+import type {
+  ShortenResponse,
+  StatsResponse,
+  HealthCheckResponse,
+} from "@/types";
 import { API_BASE } from "@/constants";
 
 /**
@@ -90,13 +94,23 @@ async function retryWithBackoff<T>(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
+      // Check if error has status code
+      const errorWithStatus = error as Error & { status?: number };
+      
       // Don't retry on client errors (4xx) except 429 (rate limit)
-      if (
-        error instanceof Error &&
-        error.message.includes("status") &&
-        !error.message.includes("429")
-      ) {
-        throw error;
+      // Rate limit errors (429) should be retried with exponential backoff
+      if (errorWithStatus.status !== undefined) {
+        const status = errorWithStatus.status;
+        
+        // Don't retry on 4xx errors except 429 (rate limit)
+        if (status >= 400 && status < 500 && status !== 429) {
+          throw error;
+        }
+        
+        // Don't retry on 5xx errors after max retries
+        if (status >= 500 && attempt === maxRetries) {
+          throw error;
+        }
       }
 
       // Don't retry on last attempt
@@ -129,8 +143,8 @@ async function handleResponse<T>(
       errorMessage = response.statusText || errorMessage;
     }
 
-    const error = new Error(errorMessage);
-    (error as any).status = response.status;
+    const error = new Error(errorMessage) as Error & { status?: number };
+    error.status = response.status;
     throw error;
   }
 
@@ -152,7 +166,7 @@ export async function shortenUrl(
 ): Promise<ShortenResponse> {
   return retryWithBackoff(async () => {
     const response = await fetchWithTimeout(
-      `${API_BASE}/shorten`,
+      `${API_BASE}/api/shorten`,
       {
         method: "POST",
         headers: {
@@ -180,11 +194,30 @@ export async function getStats(
   signal?: AbortSignal
 ): Promise<StatsResponse> {
   return retryWithBackoff(async () => {
-    const response = await fetchWithTimeout(`${API_BASE}/stats/${slug}`, {
+    const response = await fetchWithTimeout(`${API_BASE}/api/stats/${slug}`, {
       signal, // Add signal support
     });
 
     return handleResponse<StatsResponse>(response, "Failed to get stats");
+  });
+}
+
+/**
+ * Check the health status of the API and database
+ * @param signal - Optional AbortSignal to cancel the request
+ */
+export async function checkHealth(
+  signal?: AbortSignal
+): Promise<HealthCheckResponse> {
+  return retryWithBackoff(async () => {
+    const response = await fetchWithTimeout(`${API_BASE}/health`, {
+      signal, // Add signal support
+    });
+
+    return handleResponse<HealthCheckResponse>(
+      response,
+      "Failed to check health"
+    );
   });
 }
 

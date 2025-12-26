@@ -2,6 +2,7 @@ import { Component, type ReactNode } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { logger } from "@/utils/logger";
 
 interface Props {
   children: ReactNode;
@@ -28,10 +29,13 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to console in development
-    if (import.meta.env.DEV) {
-      console.error("ErrorBoundary caught an error:", error, errorInfo);
-    }
+    // Log error with structured logger
+    logger.error("ErrorBoundary caught an error", error, {
+      context: "ErrorBoundary",
+      data: {
+        componentStack: errorInfo.componentStack,
+      },
+    });
 
     // In production, you could log to an error tracking service here
     // Example: Sentry.captureException(error, { contexts: { react: errorInfo } });

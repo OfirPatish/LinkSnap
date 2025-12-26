@@ -6,16 +6,17 @@ import { z } from "zod";
 const urlValidation = z
   .string()
   .min(1, "URL is required")
+  .trim()
   .refine(
     (url) => {
       // Basic URL pattern check
-      const trimmed = url.trim();
-      if (!trimmed) return false;
+      // url is already trimmed by Zod's .trim()
+      if (!url) return false;
 
       // Try to parse as URL (with or without protocol)
-      let testUrl = trimmed;
-      if (!trimmed.match(/^https?:\/\//i)) {
-        testUrl = `https://${trimmed}`;
+      let testUrl = url;
+      if (!url.match(/^https?:\/\//i)) {
+        testUrl = `https://${url}`;
       }
 
       try {
@@ -45,8 +46,9 @@ const urlValidation = z
   );
 
 /**
- * Validation schemas
+ * Validation schema for URL shortening requests
  */
 export const shortenUrlSchema = z.object({
   url: urlValidation,
 });
+

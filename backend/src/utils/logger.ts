@@ -1,106 +1,58 @@
-/**
- * Enhanced console logging utilities
- */
-
-const colors = {
-  reset: "\x1b[0m",
-  bright: "\x1b[1m",
-  dim: "\x1b[2m",
-  red: "\x1b[31m",
-  green: "\x1b[32m",
-  yellow: "\x1b[33m",
-  blue: "\x1b[34m",
-  magenta: "\x1b[35m",
-  cyan: "\x1b[36m",
-};
+import pino from "pino";
+import { getEnv } from "./env.js";
 
 /**
- * Print a styled banner
+ * Structured logger using Pino
+ * Provides different log levels and pretty printing in development
  */
-function printBanner() {
-  const banner = `
-${colors.cyan}╔═══════════════════════════════════════════════════════════╗
-║                                                       ║
-║${colors.bright}           🔗  LinkSnap Backend Server  🔗${colors.reset}${colors.cyan}           ║
-║                                                       ║
-╚═══════════════════════════════════════════════════════════╝${colors.reset}
-`;
-  console.log(banner);
-}
+export const logger = pino({
+  level:
+    process.env.LOG_LEVEL ||
+    (getEnv().NODE_ENV === "production" ? "warn" : "info"),
+  transport:
+    getEnv().NODE_ENV === "development"
+      ? {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+            translateTime: "HH:MM:ss",
+            ignore: "pid,hostname",
+            singleLine: false,
+            hideObject: false,
+          },
+        }
+      : undefined,
+  formatters: {
+    level: (label) => {
+      // Return level as uppercase string for display
+      return { level: label.toUpperCase() };
+    },
+    log: (object) => {
+      // Add icon and context formatting to the log object
+      const level = object.level || 20;
+      const icons: Record<number, string> = {
+        10: "🔍",
+        20: "ℹ️ ",
+        30: "⚠️ ",
+        40: "❌",
+        50: "💀",
+      };
+      const icon = icons[level] || "📝";
+      
+      // Format message with icon and context
+      if (object.msg && typeof object.msg === "string") {
+        const context = object.context ? `[${object.context}]` : "";
+        object.msg = `${icon} ${context} ${object.msg}`.trim();
+      }
+      
+      return object;
+    },
+  },
+  timestamp: pino.stdTimeFunctions.isoTime,
+});
 
 /**
- * Print a styled section header
+ * Request logger middleware for Pino
+ * Use this instead of the basic requestLogger middleware
  */
-function printSection(title: string) {
-  console.log(
-    `\n${colors.cyan}${colors.bright}▶${colors.reset} ${colors.bright}${title}${colors.reset}`
-  );
-}
-
-/**
- * Print a key-value pair
- */
-function printInfo(
-  key: string,
-  value: string | number,
-  status: "success" | "info" | "warning" = "info"
-) {
-  const statusIcon = {
-    success: `${colors.green}✓${colors.reset}`,
-    info: `${colors.blue}ℹ${colors.reset}`,
-    warning: `${colors.yellow}⚠${colors.reset}`,
-  }[status];
-
-  const padding = " ".repeat(Math.max(0, 20 - key.length));
-  console.log(
-    `  ${statusIcon} ${colors.dim}${key}:${padding}${colors.reset} ${value}`
-  );
-}
-
-/**
- * Print server startup information
- */
-export function printServerInfo(port: number, env: string, baseUrl?: string) {
-  printBanner();
-
-  printSection("Server Configuration");
-  printInfo("Environment", env, env === "production" ? "warning" : "info");
-  printInfo("Port", port.toString(), "success");
-  if (baseUrl) {
-    printInfo("Base URL", baseUrl, "info");
-  }
-
-  printSection("Database");
-  printInfo("Status", "Initialized", "success");
-  printInfo("Type", "SQLite", "info");
-
-  printSection("Middleware");
-  printInfo("Compression", "Enabled", "success");
-  printInfo("Security Headers", "Enabled", "success");
-  printInfo("Rate Limiting", "Enabled", "success");
-  printInfo("Request Logging", "Enabled", "success");
-  printInfo("CORS", "Enabled", "success");
-
-  printSection("API Endpoints");
-  printInfo("POST /api/shorten", "URL Shortening", "info");
-  printInfo("GET /api/stats/:slug", "Link Statistics", "info");
-  printInfo("GET /:slug", "Link Redirect", "info");
-  printInfo("GET /health", "Health Check", "info");
-
-  console.log(
-    `\n${colors.green}${colors.bright}✓${colors.reset} ${colors.bright}Server is ready!${colors.reset}`
-  );
-  console.log(
-    `${colors.cyan}${colors.dim}→${colors.reset} ${colors.bright}http://localhost:${port}${colors.reset}\n`
-  );
-}
-
-/**
- * Print database initialization error
- */
-export function printDbError(error: Error) {
-  console.error(
-    `\n${colors.red}${colors.bright}✗${colors.reset} ${colors.red}${colors.bright}Database Initialization Failed${colors.reset}`
-  );
-  console.error(`${colors.red}${error.message}${colors.reset}\n`);
-}
+export { pinoHttp } from "pino-http";

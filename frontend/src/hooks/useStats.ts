@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getStats } from "@/lib/api/url";
 import type { StatsResponse } from "@/types";
+import { logger } from "@/utils/logger";
 
 /**
  * Custom hook for managing stats fetching and display state
@@ -14,9 +15,10 @@ export function useStats() {
 
   // Cleanup on unmount - cancel all pending requests
   useEffect(() => {
+    const controllers = abortControllersRef.current;
     return () => {
       // Cancel all pending requests on unmount
-      Object.values(abortControllersRef.current).forEach((controller) => {
+      Object.values(controllers).forEach((controller) => {
         controller.abort();
       });
     };
@@ -57,7 +59,7 @@ export function useStats() {
     } catch (err) {
       // Don't log aborted requests as errors
       if (err instanceof Error && err.name !== "AbortError") {
-        console.error("Failed to load stats:", err);
+        logger.error("Failed to load stats", err, { context: "useStats" });
       }
     } finally {
       if (!controller.signal.aborted) {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "./logger.js";
 
 /**
  * Environment variable validation schema
@@ -14,6 +15,13 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
+  LOG_LEVEL: z
+    .enum(["fatal", "error", "warn", "info", "debug", "trace"])
+    .optional(),
+  CACHE_TTL: z
+    .string()
+    .optional()
+    .transform((val) => (val ? Number(val) : undefined)),
 });
 
 /**
@@ -37,10 +45,14 @@ export function getEnv(): Env {
     return validatedEnv;
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error("❌ Environment variable validation failed:");
-      error.errors.forEach((err) => {
-        console.error(`  - ${err.path.join(".")}: ${err.message}`);
-      });
+      const errorDetails = error.errors.map((err) => ({
+        path: err.path.join("."),
+        message: err.message,
+      }));
+      logger.error(
+        { errors: errorDetails },
+        "Environment variable validation failed"
+      );
       throw new Error("Invalid environment variables");
     }
     throw error;

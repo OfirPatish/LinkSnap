@@ -88,20 +88,20 @@ export function UrlForm({ onSuccess }: UrlFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-5"
+      className="space-y-4"
       aria-label="URL Shortener Form"
     >
-      <div className="space-y-2">
+      <div className="space-y-3">
         <label
           htmlFor="url-input"
-          className="text-sm font-medium text-foreground/80 block"
+          className="text-sm font-medium text-foreground block"
         >
-          Enter your long URL
+          Paste your long URL
         </label>
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch">
-          <div className="flex-1 relative">
+        <div className="flex flex-col gap-3">
+          <div className="relative">
             <LinkIcon
-              className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
               aria-hidden="true"
             />
             <Input
@@ -109,9 +109,9 @@ export function UrlForm({ onSuccess }: UrlFormProps) {
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com/very/long/url/that/needs/shortening"
+              placeholder="https://example.com/very/long/url"
               disabled={loading}
-              className="h-14 text-base pl-12 pr-4 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all border-2"
+              className="h-12 sm:h-14 text-base sm:text-base pl-10 pr-4 border focus-visible:ring-2 focus-visible:ring-primary touch-manipulation"
               aria-label="URL to shorten"
               aria-describedby={error ? "url-error" : "url-hint"}
               aria-invalid={!!error}
@@ -122,17 +122,17 @@ export function UrlForm({ onSuccess }: UrlFormProps) {
             type="submit"
             disabled={loading || !url.trim()}
             size="lg"
-            className="w-full sm:w-auto px-8 h-14 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-12 sm:h-14 text-base font-medium touch-manipulation"
             aria-label={loading ? "Creating short link" : "Create short link"}
           >
             {loading ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin mr-2" />
                 <span>Shortening...</span>
               </>
             ) : (
               <>
-                <Zap className="h-5 w-5 mr-2" />
+                <Zap className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 <span>Shorten URL</span>
               </>
             )}
@@ -154,7 +154,7 @@ export function UrlForm({ onSuccess }: UrlFormProps) {
       )}
 
       <p id="url-hint" className="text-xs text-muted-foreground text-center">
-        Supports HTTP and HTTPS URLs. No registration required.
+        Supports HTTP and HTTPS URLs • No registration required
       </p>
     </form>
   );

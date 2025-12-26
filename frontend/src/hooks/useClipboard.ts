@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { logger } from "@/utils/logger";
 
 /**
  * Custom hook for handling clipboard operations with success state tracking
@@ -16,7 +17,7 @@ export function useClipboard(timeout: number = 2000) {
         setTimeout(() => setCopiedId(null), timeout);
       }
     } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
+      logger.error("Failed to copy to clipboard", error, { context: "useClipboard" });
       throw error;
     }
   };

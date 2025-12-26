@@ -6,17 +6,16 @@ import { BarChart3 } from "lucide-react";
  */
 export function EmptyHistory() {
   return (
-    <Card className="border-dashed border-2">
-      <CardContent className="pt-12 sm:pt-16 pb-12 sm:pb-16 text-center px-4 sm:px-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-muted mb-6">
-          <BarChart3 className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />
+    <Card className="border-dashed">
+      <CardContent className="pt-12 sm:pt-16 pb-12 sm:pb-16 text-center px-4">
+        <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted mb-4">
+          <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg sm:text-xl font-semibold mb-2 text-foreground">
+        <h3 className="text-base sm:text-lg font-semibold mb-2 text-foreground">
           No links yet
         </h3>
-        <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
-          Shorten your first URL above and it will appear here. All your
-          shortened links are saved locally in your browser.
+        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+          Shorten your first URL above and it will appear here.
         </p>
       </CardContent>
     </Card>

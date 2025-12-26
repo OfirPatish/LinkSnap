@@ -5,37 +5,32 @@ import { Link2, Zap, Shield, Clock } from "lucide-react";
  */
 export function HeroSection() {
   return (
-    <div className="text-center">
-      {/* Logo/Brand */}
-      <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 mb-6 shadow-lg">
-        <Link2 className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
-      </div>
-
+    <div className="space-y-4 sm:space-y-6">
       {/* Main heading */}
-      <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-3">
-        <span className="bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent">
-          LinkSnap
-        </span>
+      <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight text-foreground leading-tight">
+        Shorten Your Links
+        <br className="hidden sm:block" />
+        <span className="text-primary"> Instantly</span>
       </h1>
 
       {/* Subheading */}
-      <p className="text-lg sm:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
-        Shorten your links instantly. Free, fast, and secure.
+      <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-xl mx-auto px-2">
+        Create short, memorable links for free. No sign-up required.
       </p>
 
-      {/* Feature badges */}
-      <div className="flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm">
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-          <Zap className="w-3.5 h-3.5" />
-          <span className="font-medium">Instant</span>
+      {/* Feature badges - Horizontal layout */}
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-2">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-muted text-muted-foreground text-xs sm:text-sm">
+          <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          <span>Instant</span>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-          <Shield className="w-3.5 h-3.5" />
-          <span className="font-medium">Secure</span>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-muted text-muted-foreground text-xs sm:text-sm">
+          <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          <span>Secure</span>
         </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-          <Clock className="w-3.5 h-3.5" />
-          <span className="font-medium">No Sign-up</span>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-muted text-muted-foreground text-xs sm:text-sm">
+          <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          <span>Free</span>
         </div>
       </div>
     </div>

@@ -1,13 +1,13 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
-import { createLink } from "../url.service.js";
-import { shortenUrlSchema } from "../validators/index.js";
+import { createLink } from "../services/url.js";
+import { shortenUrlSchema } from "../validators/url.js";
 import { getBaseUrl } from "../utils/url.js";
 import { ValidationError, DatabaseError } from "../utils/errors.js";
 
 const router = Router();
 
-router.post("/", async (req: Request, res: Response, next) => {
+router.post("/", (req: Request, res: Response, next) => {
   try {
     const { url } = shortenUrlSchema.parse(req.body);
     const baseUrl = getBaseUrl(req);
